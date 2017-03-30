@@ -1,0 +1,710 @@
+<!DOCTYPE html><html>
+<head>
+<title>Predicting crime levels in Washington DC with machine learning</title>
+<!--Generated on Mon Mar 13 22:08:22 2017 by LaTeXML (version 0.8.2) http://dlmf.nist.gov/LaTeXML/.-->
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<div class="ltx_titlepage">
+<div class="ltx_pagination ltx_role_newpage"></div>
+<div class="ltx_abstract">
+      <h3>Summary</h3>
+<p class="ltx_p_abstract">In this study, we critically assess the performance of methods of machine-learning with the aim of predicting areas of high and low seasonal burglary rates in Washington, DC. We present two techniques: Random Forest (RF) and Support Vector Machine (SVM). It is generally agreed that Random Forest and SVM are amongst the best performing classifiers, and both have been used effectively in crime classification. In our experiment, SVM performed better than Random Forest by only a small margin which is likely not statistically significant. However, Random Forest proved to be a better performer in terms of ease of implementation, speed, and interpretability.</p>
+    
+</div>
+
+
+</div>
+<div class="ltx_pagination ltx_role_newpage"></div>
+<div class="ltx_TOC ltx_role_contents">
+<h4>Contents:</h4>
+<ul class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_section"><a href="#S1" title="1 Introduction ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a href="#S2" title="2 Methods ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Methods</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a href="#S3" title="3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Data</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a href="#S4" title="4 Exploratory Data Analysis ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Exploratory Data Analysis</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a href="#S5" title="5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Random Forest - by Sarah Hank</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a href="#S6" title="6 SVM - by Duccio Aiazzi ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>SVM - by Duccio Aiazzi</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a href="#S7" title="7 Comparison ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7 </span>Comparison</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a href="#S8" title="8 Appendix ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">8 </span>Appendix</span></a></li>
+</ul>
+</div>
+<div class="ltx_pagination ltx_role_newpage"></div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p class="ltx_p">This experiment aims to compare the use of two classification algorithms to predict levels of crime in Washington, DC: Support Vector Machines (SVM) <cite class="ltx_cite ltx_citemacro_citep">(Vapnik and Chervonenkis, <a href="#bib.bib6" title="Theory of pattern recognition" class="ltx_ref">1974</a>)</cite> and Random Forest <cite class="ltx_cite ltx_citemacro_citep">(Breiman, <a href="#bib.bib7" title="Random forests" class="ltx_ref">2001</a>)</cite>. We use various demographic, economic, and housing factors to classify census tracts into either high or low crime categories. Though the first idea was to develop a model to predict crime at a very fine temporal scale using variables easy to monitor on a daily basis, the project later turned to a model to predict crime levels from one year to the other using census data. Therefore, the scope of the model changed from a daily prediction to a resource allocation tool on a yearly or seasonal basis.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Methods</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p class="ltx_p">We chose to use SVM and Random Forest as they rank very high in terms of classifier performances <cite class="ltx_cite ltx_citemacro_citep">(Fernández-Delgado<span class="ltx_text ltx_bib_etal"> et al.</span>, <a href="#bib.bib5" title="Do we need hundreds of classifiers to solve real world classification problems?" class="ltx_ref">2014</a>)</cite> and because we are interested in spotting the interaction of crime with other measurable variables. Of course other methods would have been appropriate too: for example, given that crime is spatially and temporally autocorrelated <cite class="ltx_cite ltx_citemacro_citep">(Anselin<span class="ltx_text ltx_bib_etal"> et al.</span>, <a href="#bib.bib8" title="Spatial analyses of crime" class="ltx_ref">2000</a>)</cite>, a Space Time AutoRegressive Integrated Moving Average (STARIMA) or Space Time Scan Statistics (STSS) model would have been effective in spotting hotspots and patterns <cite class="ltx_cite ltx_citemacro_citep">(Olligschlaeger and Gorr, <a href="#bib.bib9" title="Spatio-temporal forecasting of crime" class="ltx_ref">1997</a>)</cite>. However, these methods are limited to space and time factors and do not take into account other variables.</p>
+</div>
+<div id="S2.p2" class="ltx_para">
+<p class="ltx_p">The use of Random Forest as a predictor for crime is relatively new, and thus there is not a large amount of literature exploring its effectiveness. The literature that does exist, however, seems to tout the method’s success. <cite class="ltx_cite ltx_citemacro_cite">Bogomolov<span class="ltx_text ltx_bib_etal"> et al.</span> (<a href="#bib.bib14" title="Once upon a crime: towards crime prediction from demographics and mobile data" class="ltx_ref">2014</a>)</cite> compared methods of ANN, SVM, and Random Forest using human behavior from aggregated mobile data in addition to demographic factors to predict crime hotspots in London <cite class="ltx_cite ltx_citemacro_citep">(Bogomolov<span class="ltx_text ltx_bib_etal"> et al.</span>, <a href="#bib.bib14" title="Once upon a crime: towards crime prediction from demographics and mobile data" class="ltx_ref">2014</a>)</cite>. They concluded that Random Forest was the most successful of these methods, with a successful prediction rate of 70%. Another study by <cite class="ltx_cite ltx_citemacro_cite">Breitenbach<span class="ltx_text ltx_bib_etal"> et al.</span> (<a href="#bib.bib19" title="Creating risk-scores in very imbalanced datasets–predicting extremely violent crime among criminal offenders following release from prison" class="ltx_ref">2009</a>)</cite> compared random forests, support vector machines, gradient descent, neural networks, and ADTree, as well as logistic regression methods to predict violent arrests after prison release and also found Random Forest to perform the best. Because SVM methods have been proposed much longer ago, more literature is available on crime prediction. As a classifier, it is mainly used in finding hotspots, or areas with relatively higher rates of crime. <cite class="ltx_cite ltx_citemacro_cite">Kianmehr and Alhajj (<a href="#bib.bib18" title="Effectiveness of support vector machine for crime hot-spots prediction" class="ltx_ref">2008</a>)</cite> compare the success of one-class and two-class SVMs against neural networks and Structure Activity Relationships (SAR) in classifying crime hotspots in Columbus, Ohio and St. Louis, Missouri, and find that two-class SVMs work the best.</p>
+</div>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Data</h2>
+
+<figure id="S3.F1" class="ltx_figure"><img src="content/project2/img/x1.png" id="S3.F1.g1" class="ltx_graphics ltx_centering" width="436" height="300" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Average seasonal count of burglary per census tract, training set and test set</figcaption>
+</figure>
+<div id="S3.p1" class="ltx_para">
+<p class="ltx_p">The crime data we investigate comes from the District of Columbia’s Metropolitan Police Department’s Crime Map tool <cite class="ltx_cite ltx_citemacro_citep">(Metropolitan Police Department, <a href="#bib.bib11" title="" class="ltx_ref">2008</a>)</cite>. The data contains crimes related to theft, robbery, and burglary and other violent crimes. Each incident comes with associated date and time of occurrence, the type of crime (offence), and the location of the crime presented as latitude and longitude, as well as the census tract in which it occurred. We use census tracts as our areal unit of analysis since this gives us the ability to analyse census data which is also aggregated by census tract. From Fig. <a href="#S3.F1" title="Figure 1 ‣ 3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> we can see that the distribution in space of burglary offences is quite different between the average for the three years of the training set and 2014. Fig. <a href="#S3.F2" title="Figure 2 ‣ 3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, shows how the main difference in the occurrence of burglary is the census tract: few census tracts have in fact a low level of burglaries throughout the four years, where the others are divided between the ones who experience a steady high rate and the ones where there is more variation.</p>
+</div>
+<figure id="S3.F2" class="ltx_figure"><img src="content/project2/img/x2.png" id="S3.F2.g1" class="ltx_graphics ltx_centering" width="225" height="300" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Heatmap of burglary occurrences by month and by census tract</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:52.5px;vertical-align:-20.6pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<span class="ltx_inline-block ltx_minipage ltx_align_middle" style="width:433.6pt;">
+<span class="ltx_p"><span class="ltx_text" style="font-size:80%;">On the horizontal axis the month and on the vertical</span></span>
+<span class="ltx_p"><span class="ltx_text" style="font-size:80%;">one the census tract. The yellow lines represent areas</span></span>
+<span class="ltx_p"><span class="ltx_text" style="font-size:80%;">where the burglary rate is consistently low.</span></span>
+<span class="ltx_p"><span class="ltx_text" style="font-size:80%;">Some other areas are always red, but some others</span></span>
+<span class="ltx_p"><span class="ltx_text" style="font-size:80%;">shows some temporal pattern.</span></span>
+</span>
+</span></div>
+</figure>
+<div id="S3.p2" class="ltx_para">
+<p class="ltx_p">As mentioned earlier, we originally intended to use weather data as a variable to try to partially predict crime rate variations on an almost daily basis. The idea came from the literature review: the link between crime and weather is well-documented, and generally concludes that warmer temperatures result in more crime, specifically crimes of aggression <cite class="ltx_cite ltx_citemacro_citep">(Cohn, <a href="#bib.bib13" title="Weather and crime" class="ltx_ref">1990</a>)</cite>. When we looked at our data, though, we did not find any correlation. In fact, there is a clear seasonal pattern in the count of crimes and therefore a correlation between this and temperature. We normalised temperature in two ways: first by taking the absolute deviation from the 30 year historical average for that day, and second by calculating a Z-score for that day’s average temperature relative to the average temperatures from the preceding 14 days. Once we eliminated the seasonality by normalising the temperature, we found that relative variation in temperature has no correlation at all with crime rates. Therefore we decided to move our attention to a longer term prediction based on census data.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure">
+<table class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr">
+<td class="ltx_td ltx_align_center">
+<img src="content/project2/img/x3.png" id="S3.F3.g1" class="ltx_graphics" width="271" height="248" alt="">
+</td>
+<td class="ltx_td ltx_align_center"><img src="content/project2/img/x4.png" id="S3.F3.g2" class="ltx_graphics" width="269" height="248" alt=""></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Levels of income</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:25px;vertical-align:-11.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p class="ltx_p ltx_minipage ltx_align_middle" style="width:433.6pt;"><span class="ltx_text" style="font-size:80%;">Map indicates clear segregation between wealthy and deprived areas.</span></p>
+</span></div>
+</figure>
+<div id="S3.p3" class="ltx_para">
+<p class="ltx_p">Violent crime crime is, of course, associated with deprived conditions and there is a vast body of literature on the subject: <cite class="ltx_cite ltx_citemacro_cite">Ehrlich (<a href="#bib.bib15" title="On the relation between education and crime" class="ltx_ref">1975</a>)</cite> on the relation with educational attainment, <cite class="ltx_cite ltx_citemacro_cite">Ellis<span class="ltx_text ltx_bib_etal"> et al.</span> (<a href="#bib.bib16" title="Handbook of crime correlates" class="ltx_ref">2009</a>)</cite> on unemployment, <cite class="ltx_cite ltx_citemacro_cite">Patterson (<a href="#bib.bib17" title="Poverty, income inequality, and community crime rates" class="ltx_ref">1991</a>)</cite> on income and deprivation. For our study, we extracted a set of indicators from the American Community Survey 5 year-estimates for each year from 2011 - 2014. The indicators are related to household types, educational attainment, unemployment levels, income, house occupancy, house values, and age classes. For the full list of variables see Fig. <a href="#S8.SSx3" title="ACS variables ‣ 8 Appendix ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a>, in Section <a href="#S8.SSx3" title="ACS variables ‣ 8 Appendix ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a>. Our goal is to spot non-linear dynamics amongst these variables and the rates of crime per area. One example could be the subject of age class: it is reasonable to expect more burglaries committed by younger persons. However, offenders do not necessarily commit crimes in the places where they live, but rather might chose to commit their crime in a residential area with higher housing value or income level. Therefore, crime patterns will likely interact with income data both in terms of where offenders are and where they commit a crime.</p>
+</div>
+<div id="S3.p4" class="ltx_para">
+<p class="ltx_p">Below is a visualisation of the data from four of the census input variables: Median Income, Poverty Level, Median Age, and Unemployment Level. Each map visualises the data for the year 2014, while each line chart shows the change over the four years for the tracts with the highest and lowest values. These graphs provide context in both the variability of the data as well as the landscape of the city.</p>
+</div>
+<figure id="S3.F4" class="ltx_figure">
+<table class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr">
+<td class="ltx_td ltx_align_center">
+<img src="content/project2/img/x5.png" id="S3.F4.g1" class="ltx_graphics" width="271" height="248" alt="">
+</td>
+<td class="ltx_td ltx_align_center"><img src="content/project2/img/x6.png" id="S3.F4.g2" class="ltx_graphics" width="269" height="248" alt=""></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Percentage of family below poverty levels</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:25px;vertical-align:-11.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p class="ltx_p ltx_minipage ltx_align_middle" style="width:433.6pt;"><span class="ltx_text" style="font-size:80%;">Concentration of poverty is mostly seen in southern part of the city.</span></p>
+</span></div>
+</figure>
+<div id="S3.p5" class="ltx_para">
+<p class="ltx_p">The map of median income (Fig. <a href="#S3.F3" title="Figure 3 ‣ 3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, page <a href="#S3.F3" title="Figure 3 ‣ 3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>) clearly displays a key feature of the landscape of DC: inequality. Tracts west of 16th St (the road which divides DC from the top point of the diamond) and tracts around Capitol Hill (the chunk of darker tracts in the Eastern part of the city) are fairly distinctly separated from poorer tracts. The max and min tracts show little variability over time except a slight dip in the values of the max tract in 2013.</p>
+</div>
+<figure id="S3.F5" class="ltx_figure">
+<table class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr">
+<td class="ltx_td ltx_align_center">
+<img src="content/project2/img/x7.png" id="S3.F5.g1" class="ltx_graphics" width="271" height="248" alt="">
+</td>
+<td class="ltx_td ltx_align_center"><img src="content/project2/img/x8.png" id="S3.F5.g2" class="ltx_graphics" width="269" height="248" alt=""></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Median age</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:25px;vertical-align:-11.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p class="ltx_p ltx_minipage ltx_align_middle" style="width:433.6pt;"><span class="ltx_text" style="font-size:80%;">Median age is highly variable across the city.</span></p>
+</span></div>
+</figure>
+<div id="S3.p6" class="ltx_para">
+<p class="ltx_p">The map in Fig. <a href="#S3.F4" title="Figure 4 ‣ 3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> (page <a href="#S3.F4" title="Figure 4 ‣ 3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>) shows high spatial clustering of high poverty tracts in the south and south east, the poorest part of the city. Some of the darker tracts in the north west quadrant contain college campuses. The min tract changes very little over time, which is expected since the wealthier parts of the city will tend to stay wealthy.</p>
+</div>
+<figure id="S3.F6" class="ltx_figure">
+<table class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr">
+<td class="ltx_td ltx_align_center">
+<img src="content/project2/img/x9.png" id="S3.F6.g1" class="ltx_graphics" width="271" height="248" alt="">
+</td>
+<td class="ltx_td ltx_align_center"><img src="content/project2/img/x10.png" id="S3.F6.g2" class="ltx_graphics" width="269" height="248" alt=""></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Unemployment rate</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:32.5px;vertical-align:-13.4pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p class="ltx_p ltx_minipage ltx_align_middle" style="width:433.6pt;"><span class="ltx_text" style="font-size:80%;">Unemployment levels mirror segregation seen in maps of poverty level and median income.</span></p>
+</span></div>
+</figure>
+<div id="S3.p7" class="ltx_para">
+<p class="ltx_p">As expected, median age does not have much variability from 2011 - 2014 in the max and min tracts (Fig. <a href="#S3.F5" title="Figure 5 ‣ 3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>, page <a href="#S3.F5" title="Figure 5 ‣ 3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>). Given the median age in the min tract hangs below 25, it is likely the location of a college campus where the rollover of students each year would ensure the age stays consistent. A look at the map shows that the tracts with the highest median age are in isolated long-term residential areas which have not been affected by gentrification. This explains the lack of variability over time.</p>
+</div>
+<div id="S3.p8" class="ltx_para">
+<p class="ltx_p">There is obvious spatial segregation displayed in Fig. <a href="#S3.F6" title="Figure 6 ‣ 3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> (page <a href="#S3.F6" title="Figure 6 ‣ 3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>) of unemployment levels. A large chunk of contiguous tracts in the north west have the lowest unemployment rates. A large tract in south east also displays very low unemployment while the tracts around it have some of the highest rates. This is due to the presence of Bolling Air Force base in that tract. Interestingly, this variable has the highest variability over time, with the min and max tracts heading slightly toward convergence.</p>
+</div>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Exploratory Data Analysis</h2>
+
+<figure id="S4.F7" class="ltx_figure">
+<table class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr">
+<td class="ltx_td ltx_align_center"><img src="content/project2/img/x11.png" id="S4.F7.g1" class="ltx_graphics" width="269" height="226" alt=""></td>
+<td class="ltx_td ltx_align_center"><img src="content/project2/img/x12.png" id="S4.F7.g2" class="ltx_graphics" width="264" height="226" alt=""></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>Seasonal variability of crime counts</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:25px;vertical-align:-11.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p class="ltx_p ltx_minipage ltx_align_middle" style="width:433.6pt;"><span class="ltx_text" style="font-size:80%;">The count of crime offences is clearly related to seasons.</span></p>
+</span></div>
+</figure>
+<figure id="S4.F8" class="ltx_figure"><img src="content/project2/img/x13.png" id="S4.F8.g1" class="ltx_graphics ltx_centering" width="525" height="350" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 8: </span>Auto correlation plot: over four years and close-up over three months</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:42.5px;vertical-align:-17.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p class="ltx_p ltx_minipage ltx_align_middle" style="width:433.6pt;"><span class="ltx_text" style="font-size:80%;">The ACF shows a clear seasonal affect which diminishes over the years. A zoom into one area of the plot shows an interesting effect on the weekends.</span></p>
+</span></div>
+</figure>
+<div id="S4.p1" class="ltx_para">
+<p class="ltx_p">In this section, we will examine the temporal and spatial autocorrelation properties of the crime dataset. As we can see in Fig. <a href="#S4.F7" title="Figure 7 ‣ 4 Exploratory Data Analysis ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a>, the count of crime offences is clearly related to seasons. In order to quantify the extent to which near observations are more similar than distant observations in time we plot the autocorrelation function (ACF) (Fig. <a href="#S4.F8" title="Figure 8 ‣ 4 Exploratory Data Analysis ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a>, page <a href="#S4.F8" title="Figure 8 ‣ 4 Exploratory Data Analysis ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a>): values near 1 are close to perfect positive correlation and values near -1 are close to perfect negative correlation. At lag 0, the correlation is 1, because we are comparing the same point in time.</p>
+</div>
+<div id="S4.p2" class="ltx_para">
+<p class="ltx_p">The graph on the right in Fig. <a href="#S4.F8" title="Figure 8 ‣ 4 Exploratory Data Analysis ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a> shows the ACF of the daily count of offences with a lag of four years: there is a clear seasonal pattern as the positive peaks are all at the years marks. This means that every season is strongly correlated from year to year, although this correlation fades for further years. A closer view reveals also an interesting autocorrelation by the day of the week.
+</p>
+</div>
+<figure id="S4.F9" class="ltx_figure">
+<table class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr">
+<td class="ltx_td ltx_align_center"><img src="content/project2/img/x14.png" id="S4.F9.g1" class="ltx_graphics" width="269" height="270" alt=""></td>
+<td class="ltx_td ltx_align_center"><img src="content/project2/img/x15.png" id="S4.F9.g2" class="ltx_graphics" width="264" height="270" alt=""></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 9: </span>Local Moran’s I for total burglary occurrences from 2011 - 2014 and related p-values</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:32.5px;vertical-align:-13.4pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p class="ltx_p ltx_minipage ltx_align_middle" style="width:433.6pt;"><span class="ltx_text" style="font-size:80%;">Local Moran’s I values seem to be strong in some areas, but only three areas are statistically significant.</span></p>
+</span></div>
+</figure>
+<div id="S4.p3" class="ltx_para">
+<p class="ltx_p">The spatial correlation is less obvious: there are some areas which shows a high spatial correlation (Fig. <a href="#S4.F9" title="Figure 9 ‣ 4 Exploratory Data Analysis ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">9</span></a>, page <a href="#S4.F9" title="Figure 9 ‣ 4 Exploratory Data Analysis ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">9</span></a>) but only three spots shows statistical significance. The significant areas include an affluent area near the western border containing neighbourhoods like Cleveland Park and McClean Gardens, while the significant area in the far eastern corner of the city includes a notorious chunk of neighbourhoods which have experienced high levels of violence in recent years. The significant area in the middle includes the quickly gentrifying neighbourhoods of Eckington and H Street NE.
+In this experiment we will consider the aggregation of crime offences related to burglary by season, considering winter starting in December and each season during three months. The experiment could have been run using the count aggregated by month (and predicting by the month) but once subsetted by type of offence and by census tract, the data would have been too sporadic and we would ended up with counts with too much variation and little statistical significancy.</p>
+</div>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Random Forest - by Sarah Hank</h2>
+
+<section id="S5.SSx1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Overview</h3>
+
+<figure id="S5.F10" class="ltx_figure">
+<table class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr">
+<td class="ltx_td ltx_align_right"><img src="content/project2/img/x16.png" id="S5.F10.g1" class="ltx_graphics ltx_centering" width="259" height="275" alt=""></td>
+<td class="ltx_td ltx_align_center"><img src="content/project2/img/x17.png" id="S5.F10.g2" class="ltx_graphics" width="259" height="275" alt=""></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 10: </span>Maps of real classification vs. Random Forest prediction</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:32.5px;vertical-align:-13.4pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p class="ltx_p ltx_minipage ltx_align_middle" style="width:433.6pt;"><span class="ltx_text" style="font-size:80%;">Classifies high crime areas as low crime areas more often than the opposite error.</span></p>
+</span></div>
+</figure>
+<div id="S5.SSx1.p1" class="ltx_para">
+<p class="ltx_p">Random Forest, first proposed by <cite class="ltx_cite ltx_citemacro_cite">Breiman (<a href="#bib.bib7" title="Random forests" class="ltx_ref">2001</a>)</cite>, is based on the tree classification method. In this method, many classification trees are grown, and input vectors are sent down through each tree, receiving a classification. In this way, the tree ”votes” for that classification. The classification which is ”voted for” by the most trees, wins. The parameters available for alteration include the number of trees (<em class="ltx_emph">n</em>) to be grown, and the number of variables (<em class="ltx_emph">m</em>) to be used to split each node (<em class="ltx_emph">ntree</em> and <em class="ltx_emph">mtry</em> respectively in the randomForest package in R). At each node of the tree, <em class="ltx_emph">m</em> number of variables are chosen at random from the input variables, and the best split is taken from among them at that node. The parameter <em class="ltx_emph">m</em> must of course be less than the total number of variables. Two factors are shown to increase the error rate of a random forest: the correlation between trees (more correlation means higher error), and the strength of each individual tree in the forest (stronger classifiers mean lower error) <cite class="ltx_cite ltx_citemacro_citep">(Breiman, <a href="#bib.bib7" title="Random forests" class="ltx_ref">2001</a>)</cite>. While the number of trees grown does not significantly impact the error rate, decreasing the number of split values lowers both the correlation and the strength <cite class="ltx_cite ltx_citemacro_citep">(Breiman, <a href="#bib.bib7" title="Random forests" class="ltx_ref">2001</a>)</cite>. Thus, <em class="ltx_emph">m</em> is the only parameter that has a significant effect on the error rate of Random Forest. Unlike in other tree classification methods, there is no pruning.</p>
+</div>
+<div id="S5.SSx1.p2" class="ltx_para">
+<p class="ltx_p">Random Forest has several advantages over other classification algorithms, including the fact that overfitting is not an issue <cite class="ltx_cite ltx_citemacro_citep">(Breiman and Cutler, <a href="#bib.bib20" title="" class="ltx_ref">2015</a>)</cite>. It can handle thousands of input variables, runs relatively quickly, and has a high rate of accuracy relative to other methods. Of special note is the fact that it can provide estimates of which variables are most important in determining the classification output.</p>
+</div>
+</section>
+<section id="S5.SSx2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Experimental Setup</h3>
+
+<figure id="S5.F11" class="ltx_figure"><img src="content/project2/img/x18.png" id="S5.F11.g1" class="ltx_graphics ltx_centering" width="375" height="375" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 11: </span>Classification errors with Random Forest</figcaption>
+</figure>
+<div id="S5.SSx2.p1" class="ltx_para">
+<p class="ltx_p">One advantage of Random Forest is that it can accept categorical variable inputs, however in order to have comparable results, we used the same initial data inputs for both SVM and Random Forest. As will be discussed in the Experimental Setup section of SVM, the seasonal variable was converted from a categorical value (SEASON = ”Summer”) to a binary numerical value (SUMMER = 1). We chose to focus on the crime of burglary, and so aggregated the count of incidents of burglary by year, season, and census tract. We then calculated a label for each observation, considering any value below the median of the count as a ’low” crime area, and anything above as a ”high” crime area. These were labeled as -1 and 1 respectively. This formed our initial input data.</p>
+</div>
+<div id="S5.SSx2.p2" class="ltx_para">
+<p class="ltx_p">The initial training data considered the years 2011, 2012, and 2013, with the test data being Summer 2014. We chose this time span because the demographic data from the ACS was last updated for 2014, and thus we could not test 2015. We tested against only one season at a time since the crime count was aggregated by season, and thus it makes sense for our output labels to only be applied to a single season. This is how the tool would be used to forecast police resources.</p>
+</div>
+</section>
+<section id="S5.SSx3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Analysis and Results</h3>
+
+<figure id="S5.F12" class="ltx_figure"><img src="content/project2/img/x19.png" id="S5.F12.g1" class="ltx_graphics ltx_centering" width="500" height="479" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 12: </span>Variable Importance Plot table</figcaption>
+</figure>
+<div id="S5.SSx3.p1" class="ltx_para">
+<p class="ltx_p">I trained the model on this data using various combinations of parameters. I varied the number of trees (<em class="ltx_emph">ntree</em>) between 200, 500 and 1000, and the number of split variables between 2 and 4. I ran each configuration ten times, predicted values for summer 2014, and then averaged the error. The full set of resulting errors on each configuration can be viewed in Fig. <a href="#S5.F14" title="Figure 14 ‣ Analysis and Results ‣ 5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">14</span></a>.
+The best performing configuration of this set was <em class="ltx_emph">ntree</em> = 1000, <em class="ltx_emph">mtry</em> = 2 with an error rate of 31.8%. This error rate, while the best, was not much better than other configurations that used <em class="ltx_emph">mtry</em> = 2. Increasing <em class="ltx_emph">mtry</em> consistently increased the error rate. This outcome is consistent with the idea that the number of trees does not have a great effect on error rate, however the model is sensitive to the number of split variables <cite class="ltx_cite ltx_citemacro_citep">(Breiman, <a href="#bib.bib7" title="Random forests" class="ltx_ref">2001</a>)</cite>. Next, I narrowed the training data to only the first year, 2011, and reran the model. The benefit of using only one year of training would be decreasing run time and general simplification. The optimal configuration for this set was <em class="ltx_emph">ntree</em> = 500, <em class="ltx_emph">mtry</em> = 2 with an error of 31.8%, the same as when using all years of data.</p>
+</div>
+<figure id="S5.F13" class="ltx_figure"><img src="content/project2/img/x20.png" id="S5.F13.g1" class="ltx_graphics ltx_centering" width="637" height="620" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 13: </span>Variable Importance Plot chart</figcaption>
+</figure>
+<div id="S5.SSx3.p2" class="ltx_para">
+<p class="ltx_p">During the first set of configurations, I recorded the Variable Importance Plot values into a table and found the average of the values for mean decrease in node impurity (Fig. <a href="#S5.F12" title="Figure 12 ‣ Analysis and Results ‣ 5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">12</span></a>, page <a href="#S5.F12" title="Figure 12 ‣ Analysis and Results ‣ 5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">12</span></a>). This tells us which variables are most important contributors to the model. This is a capability that is unique to Random Forest. The top four variables are Household Type: Female householder, no husband present, family - With own children under 18 years; Household Type: Female householder, no husband present, family; Educational Attainment: High school graduate or equivalent; and Age: 15 to 19 years old (Fig. <a href="#S5.F13" title="Figure 13 ‣ Analysis and Results ‣ 5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">13</span></a>, page <a href="#S5.F13" title="Figure 13 ‣ Analysis and Results ‣ 5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">13</span></a>).</p>
+</div>
+<div id="S5.SSx3.p3" class="ltx_para">
+<p class="ltx_p">To see how accurately a simplified model would perform, I trained the model on these four top performing variables for the years 2011 - 2013, predicted for summer 2014, and averaged the errors for the various configurations. The minimum error increased noticeably (to 37.1%), but considering that 87% of the variables were removed, this is actually impressive. Given that one of the benefits of machine learning is that it can handle a large amount of input variables, and that the processing time was not vastly improved, it seems reasonable to keep all of the original variables.</p>
+</div>
+<figure id="S5.F14" class="ltx_figure"><img src="content/project2/img/x21.png" id="S5.F14.g1" class="ltx_graphics ltx_centering" width="924" height="602" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 14: </span>Table of error rates of tested Random Forest parameter configurations</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:32.5px;vertical-align:-13.4pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p class="ltx_p ltx_minipage ltx_align_middle" style="width:433.6pt;"><span class="ltx_text" style="font-size:80%;">Highlighted rows indicate highest performing configuration for the given set of training data.</span></p>
+</span></div>
+</figure>
+<div id="S5.SSx3.p4" class="ltx_para">
+<p class="ltx_p">Fig. <a href="#S5.F10" title="Figure 10 ‣ Overview ‣ 5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">10</span></a> (page <a href="#S5.F10" title="Figure 10 ‣ Overview ‣ 5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">10</span></a>) and Fig. <a href="#S5.F11" title="Figure 11 ‣ Experimental Setup ‣ 5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">11</span></a> (page <a href="#S5.F11" title="Figure 11 ‣ Experimental Setup ‣ 5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">11</span></a>) show the results of running classification for burglary using the optimal parameters of ntree = 200, mtry = 2 on a training dataset using the years 2011 - 2013 and testing for the summer of 2014. The resulting error was 0.327 or 32.7% on this trial.
+Random Forest predicts with a similar rate of error (32.7%) in both summer and spring, but performs best in winter with an error of 29.6%. It performs the worst in autumn. In all seasons, this method seems to falsely predict high crime areas as low crime areas at an average rate of 23.3%. This effect can be seen in Fig. <a href="#S8.F24" title="Figure 24 ‣ Random Forest result plots ‣ 8 Appendix ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">24</span></a>, page <a href="#S8.F24" title="Figure 24 ‣ Random Forest result plots ‣ 8 Appendix ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">24</span></a> which shows the rate at which the method wrongly classifies each type.</p>
+</div>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</section>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span>SVM - by Duccio Aiazzi</h2>
+
+<section id="S6.SSx1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">The algorithm</h3>
+
+<div id="S6.SSx1.p1" class="ltx_para">
+<p class="ltx_p">Support Vector Machines (SVM) are a set of supervised machine learning models used for classification and regression analysis. Given a set of training data with each observation assigned to a binary category, SVM builds a model which can take a new set of data and return the labelling for it. The basic version of SVM is a non-probabilistic binary linear classifier: data is labelled with one or two categories and the classification is obtained by linear separation. The input is represented in the feature space as a set of points to be divided by a clear margin which is as wide as possible. New examples are represented in the same space and labels are predicted based on which side of the margin they fall in. The maximum gap is found by finding the separating hyperplane and maximising the distance of the plane form the points that are used to define the margin (Support Vectors). The hyperplane is a subspace of one dimension less than the ambient space. This means, for example, that the hyperplane of a two dimensional space such as the cartesian axis is a line. When the margin is wide, the confidence in the model is high, when the margin is very small the confidence is low. In this case and when data is non-separable, it is possible to introduce soft margins <cite class="ltx_cite ltx_citemacro_citep">(Cortes and Vapnik, <a href="#bib.bib3" title="Support-vector networks" class="ltx_ref">1995</a>)</cite>, by allowing a trade-off between the complexity of the model and the error. SVM can solve non-linear classification by mapping the input space into higher or infinite dimension space using the kernel trick <cite class="ltx_cite ltx_citemacro_citep">(Boser<span class="ltx_text ltx_bib_etal"> et al.</span>, <a href="#bib.bib2" title="A training algorithm for optimal margin classifiers" class="ltx_ref">1992</a>)</cite>. Kernels are weighting functions computed based on similarity-difference (objects less different have higher weights) first proposed by <cite class="ltx_cite ltx_citemacro_cite">Aizerman<span class="ltx_text ltx_bib_etal"> et al.</span> (<a href="#bib.bib1" title="Theoretical foundations of the potential function method in pattern recognition learning" class="ltx_ref">1964</a>)</cite>. They are used in statistics (e.g. Kernel Density Estimation KDE for estimating the probability density function) and in spatial and temporal analysis (e.g. Spatial and Spatio Temporal KDE for modelling spatial and temporal decay). SVM can be used also for non-binary classifications using algorithms that reduce multi-class tasks to several binary problems. 
+<br class="ltx_break"></p>
+</div>
+</section>
+<section id="S6.SSx2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Analysis and Results</h3>
+
+<figure id="S6.F15" class="ltx_figure"><img src="content/project2/img/x22.png" id="S6.F15.g1" class="ltx_graphics ltx_centering" width="600" height="500" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 15: </span>Prediction from the optimised model for summer 2014</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:32.5px;vertical-align:-13.4pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p class="ltx_p ltx_minipage ltx_align_middle" style="width:433.6pt;"><span class="ltx_text" style="font-size:80%;">Although not very clear, it appears that the errors lie at the borders between clusters of high crime level census tracts.</span></p>
+</span></div>
+</figure>
+<div id="S6.SSx2.p1" class="ltx_para">
+<p class="ltx_p">For the purpose of this essay, I will be using SVM classification methods using the Gaussian Radial Basis Function</p>
+<table id="S6.Ex1" class="ltx_equation ltx_eqn_table">
+
+<tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S6.Ex1.m1" class="ltx_Math" alttext="k(x,x\prime)=exp(-\frac{||x-x\prime||^{2}}{2\sigma^{2}})" display="block"><mrow><mi>k</mi><mrow><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>x</mi><mo>′</mo><mo stretchy="false">)</mo></mrow><mo>=</mo><mi>e</mi><mi>x</mi><mi>p</mi><mrow><mo stretchy="false">(</mo><mo>-</mo><mfrac><mrow><mo stretchy="false">|</mo><mo stretchy="false">|</mo><mi>x</mi><mo>-</mo><mi>x</mi><mo>′</mo><mo stretchy="false">|</mo><msup><mo stretchy="false">|</mo><mn>2</mn></msup></mrow><mrow><mn>2</mn><mo>b</mo><msup><mi>σ</mi><mn>2</mn></msup></mrow></mfrac><mo stretchy="false">)</mo></mrow></mrow></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr>
+</table>
+<p class="ltx_p">as the base kernel method although I will also test the results with the polynomial method. According to <cite class="ltx_cite ltx_citemacro_cite">StatSoft (<a href="#bib.bib4" title="Support Vector Machine" class="ltx_ref">2015</a>)</cite>, there are two classification methods, C-SVC and nu-SVM which differ in the error function that they minimise. SVM method using C-SVC is defined by the following parameters: C is the cost function, which control how much the error is penalised - hence the trade-off between complexity and prediction accuracy - and <math id="S6.SSx2.p1.m1" class="ltx_Math" alttext="\sigma" display="inline"><mi>σ</mi></math> is the rate of distance decay of the Gaussian kernel (high values correspond to slow decays). For optimisation of the two parameters I will be using the <em class="ltx_emph">caret</em> package in order to initialise a k-fold cross validation with <em class="ltx_emph">k</em> set to 10. The chosen set of parameters is used to train the model and the model is then tested with the data from summer 2014.
+The data manipulation consisted in merging multiple years of the ACS dataset into one data frame and select the chosen variables (see Fig.<a href="#S8.SSx3" title="ACS variables ‣ 8 Appendix ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a>, Section <a href="#S8" title="8 Appendix ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a>). The crime dataset was subset by selecting the lines containing burglary incidents, only, then the incidents were categorised by the season they fell in and the data aggregated to obtain the count of incidents by season for every year and every census tract.Because SVM does not take categorical variables, the variable season was split in a four dimensional binary array. These two dataset were joined by census tract, so that for each year/season/census tract we have a count of incidents, the season and the census data related to the specific census tract. The data was finally labelled -1 or 1 depending on whether the count was above or below the median of the training years and split in training set (years 2011, 2012, 2013) and test set (year 2014).
+<br class="ltx_break">As a first test, I am interested in determining whether there is a difference in using one or more years as training set. The accuracy of the model is highest when training on 2011 only (Table <a href="#S6.T1" title="Table 1 ‣ Analysis and Results ‣ 6 SVM - by Duccio Aiazzi ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, page <a href="#S6.T1" title="Table 1 ‣ Analysis and Results ‣ 6 SVM - by Duccio Aiazzi ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>), where using all the years perform slightly worse. Given that 2012 and 2013 also perform slightly worse than 2011, the good performance of the latter could be due to the fact that in respect to the variables used, 2011 might be a similar year to 2014 and using one year only of data would increase the risk of overfitting. For the rest of the test, I will be using all the three years as training set.
+<br class="ltx_break"></p>
+</div>
+<figure id="S6.T1" class="ltx_table">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr class="ltx_tr">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row">Training Years</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column">Accuracy</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column">Accuracy SD</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">2011</th>
+<td class="ltx_td ltx_align_center ltx_border_t">0.736</td>
+<td class="ltx_td ltx_align_center ltx_border_t">0.029</td>
+</tr>
+<tr class="ltx_tr">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row">2012</th>
+<td class="ltx_td ltx_align_center">0.716</td>
+<td class="ltx_td ltx_align_center">0.032</td>
+</tr>
+<tr class="ltx_tr">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row">2013</th>
+<td class="ltx_td ltx_align_center">0.670</td>
+<td class="ltx_td ltx_align_center">0.020</td>
+</tr>
+<tr class="ltx_tr">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row">All</th>
+<td class="ltx_td ltx_align_center">0.680</td>
+<td class="ltx_td ltx_align_center">0.032</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Accuracy by number of years used as training set</figcaption>
+</figure>
+<div id="S6.SSx2.p2" class="ltx_para">
+<p class="ltx_p">A first grid search with parameters <math id="S6.SSx2.p2.m1" class="ltx_Math" alttext="\sigma=0.001,0.01,0.1" display="inline"><mrow><mi>σ</mi><mo>=</mo><mrow><mn>0.001</mn><mo>,</mo><mn>0.01</mn><mo>,</mo><mn>0.1</mn></mrow></mrow></math> and C = 10, 100, 1000 suggests that the value of <math id="S6.SSx2.p2.m2" class="ltx_Math" alttext="\sigma=0.01" display="inline"><mrow><mi>σ</mi><mo>=</mo><mn>0.01</mn></mrow></math> and C = 10 gives the best model performance with an accuracy of 0.71. I can refine the search grid by using values around the best performers.</p>
+</div>
+<figure id="S6.T2" class="ltx_table">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr class="ltx_tr">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column">
+<math id="S6.T2.m1" class="ltx_Math" alttext="\sigma" display="inline"><mi>σ</mi></math> Grid</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column">C Grid</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column">Optimal <math id="S6.T2.m2" class="ltx_Math" alttext="\sigma" display="inline"><mi>σ</mi></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column">Optimal C</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column">Accuracy</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column">Conf Int 0.95</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr">
+<td class="ltx_td ltx_align_left ltx_border_t">0.001, 0.01, 0.1</td>
+<td class="ltx_td ltx_align_center ltx_border_t">10,100, 1000</td>
+<td class="ltx_td ltx_align_center ltx_border_t">0.001</td>
+<td class="ltx_td ltx_align_center ltx_border_t">100</td>
+<td class="ltx_td ltx_align_center ltx_border_t">0.721</td>
+<td class="ltx_td ltx_align_center ltx_border_t">
+<math id="S6.T2.m3" class="ltx_Math" alttext="\pm" display="inline"><mo>±</mo></math>0.042</td>
+</tr>
+<tr class="ltx_tr">
+<td class="ltx_td ltx_align_left">0.0005, 0.001, 0.0015</td>
+<td class="ltx_td ltx_align_center">50,100,150</td>
+<td class="ltx_td ltx_align_center">0.0015</td>
+<td class="ltx_td ltx_align_center">100</td>
+<td class="ltx_td ltx_align_center">0.722</td>
+<td class="ltx_td ltx_align_center">
+<math id="S6.T2.m4" class="ltx_Math" alttext="\pm" display="inline"><mo>±</mo></math>0.050</td>
+</tr>
+<tr class="ltx_tr">
+<td class="ltx_td ltx_align_left">0.0012, 0.0015, 0.0018</td>
+<td class="ltx_td ltx_align_center">80, 100, 120</td>
+<td class="ltx_td ltx_align_center">0.0012</td>
+<td class="ltx_td ltx_align_center">100</td>
+<td class="ltx_td ltx_align_center">0.7202</td>
+<td class="ltx_td ltx_align_center">
+<math id="S6.T2.m5" class="ltx_Math" alttext="\pm" display="inline"><mo>±</mo></math>0.056</td>
+</tr>
+<tr class="ltx_tr">
+<td class="ltx_td ltx_align_left">0.0011, 0.0012, 0.0013</td>
+<td class="ltx_td ltx_align_center">95, 100, 105</td>
+<td class="ltx_td ltx_align_center">0.0013</td>
+<td class="ltx_td ltx_align_center">105</td>
+<td class="ltx_td ltx_align_center">0.725</td>
+<td class="ltx_td ltx_align_center">
+<math id="S6.T2.m6" class="ltx_Math" alttext="\pm" display="inline"><mo>±</mo></math>0.057</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Parameter optimisation</figcaption>
+</figure>
+<figure id="S6.F16" class="ltx_figure"><img src="content/project2/img/x23.png" id="S6.F16.g1" class="ltx_graphics ltx_centering" width="350" height="307" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 16: </span>C plotted against accuracy by <math id="S6.F16.m2" class="ltx_Math" alttext="\sigma" display="inline"><mi>σ</mi></math> values</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:43.6111111111111px;vertical-align:-17.4pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p class="ltx_p ltx_minipage ltx_align_middle" style="width:433.6pt;"><span class="ltx_text" style="font-size:80%;">In this case, for any </span><math id="S6.F16.m3" class="ltx_Math" alttext="\sigma" display="inline"><mi mathsize="80%">σ</mi></math><span class="ltx_text" style="font-size:80%;">, the best C value appears to be 105. Based on previous optimisation, the optimal value appears to be between 105 and 120.</span></p>
+</span></div>
+</figure>
+<div id="S6.SSx2.p3" class="ltx_para">
+<p class="ltx_p">Table <a href="#S6.T2" title="Table 2 ‣ Analysis and Results ‣ 6 SVM - by Duccio Aiazzi ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> shows different results for a sequential refinement of the parameters (see Figure <a href="#S6.F16" title="Figure 16 ‣ Analysis and Results ‣ 6 SVM - by Duccio Aiazzi ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">16</span></a>): <math id="S6.SSx2.p3.m1" class="ltx_Math" alttext="\sigma=0.0013" display="inline"><mrow><mi>σ</mi><mo>=</mo><mn>0.0013</mn></mrow></math> and C = 105 give the best performance but the resulting accuracy is not statistically different from the other scenarios. The use of a higher <em class="ltx_emph">k</em> for the cross validation would reduce the standard deviation and increase the precision of the search grid, but the performances are all quite similar and it would lead to no much improvement. The use of <em class="ltx_emph">polynomial</em> kernel gives rather similar results in terms of accuracy, with the best accuracy performance of 0.71 achieved with degree = 2 and scale = 0.05.
+In terms of time performance, all the configurations complete the training in between 25 and 35 seconds, with the exception of the polynomial kernel optimisation, which takes over an hour, without any improvement in the prediction accuracy.</p>
+</div>
+<figure id="S6.F17" class="ltx_figure ltx_align_floatright"><img src="content/project2/img/x24.png" id="S6.F17.g1" class="ltx_graphics ltx_centering" width="252" height="195" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 17: </span>Number of support vectors</figcaption>
+</figure>
+<div id="S6.SSx2.p4" class="ltx_para">
+<p class="ltx_p">An attempt at simplifying the model has been made by narrowing down the variables to the four most important selected with RF in Section <a href="#S5" title="5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>. This slightly reduces the accuracy to about 66%, but it also reduces the training time to about 10s in the case of the Gaussian kernel and drops it drastically in the case of the polynomial one, down to about 40s.
+</p>
+</div>
+<div id="S6.SSx2.p5" class="ltx_para">
+<p class="ltx_p">Figure <a href="#S6.F15" title="Figure 15 ‣ Analysis and Results ‣ 6 SVM - by Duccio Aiazzi ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">15</span></a> shows the results of the model when predicting the rate of crime in summer 2014 compared to the real data. In this example the model predicts correctly the crime level in about 30% of the census tracts. Although this could be considered a decent prediction, the problem is that, as it is clear in Figure <a href="#S6.F17" title="Figure 17 ‣ Analysis and Results ‣ 6 SVM - by Duccio Aiazzi ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">17</span></a>, there is a high number of support vectors. This is a clue of overfitting, which is generally addressed with the parameter optimisation as above or more data points. In this case the problem (and the limitation of this whole exercise) might be in the data and in the little variation of the census data from one year to another.
+In Section <a href="#S8" title="8 Appendix ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a>, the results of the prediction for the other three seasons are presented. The best results are obtained in winter with an error rate of 29%(Fig. <a href="#S8.F25" title="Figure 25 ‣ SVM result plots ‣ 8 Appendix ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">25</span></a>, page <a href="#S8.F25" title="Figure 25 ‣ SVM result plots ‣ 8 Appendix ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">25</span></a>) and the worst in autumn with 36%(Fig. <a href="#S8.F29" title="Figure 29 ‣ SVM result plots ‣ 8 Appendix ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">29</span></a>, page <a href="#S8.F29" title="Figure 29 ‣ SVM result plots ‣ 8 Appendix ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">29</span></a>). An interesting aspect to would require further investigation is that there seems to be a correlation (see related barplots) between the amount of census tracts labelled above average and the error rates, suggesting that the model fails the most where the crime is high.</p>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</div>
+</section>
+</section>
+<section id="S7" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7 </span>Comparison</h2>
+
+<section id="S7.SSx1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Overview</h3>
+
+<figure id="S7.F18" class="ltx_figure"><img src="content/project2/img/x25.png" id="S7.F18.g1" class="ltx_graphics ltx_centering" width="600" height="400" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 18: </span>Error comparison between RF and SVM</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:441.1pt;height:25px;vertical-align:-11.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;-webkit-transform:translate(0.0pt,0.0pt) scale(1,1) ;-ms-transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p class="ltx_p ltx_minipage ltx_align_middle" style="width:433.6pt;"><span class="ltx_text" style="font-size:80%;">In grey the census tracts correctly labeled and in black the errors.</span></p>
+</span></div>
+</figure>
+<div id="S7.SSx1.p1" class="ltx_para">
+<p class="ltx_p">It is generally agreed that Random Forest and SVM are amongst the best performing classifiers: <cite class="ltx_cite ltx_citemacro_cite">Fernández-Delgado<span class="ltx_text ltx_bib_etal"> et al.</span> (<a href="#bib.bib5" title="Do we need hundreds of classifiers to solve real world classification problems?" class="ltx_ref">2014</a>)</cite> found that they consistently perform better than all the other algorithms in a long list and, although Random Forest is ranked at the first place and SVM second, there is no statistical difference in the performances of the two. In the present experiment, SVM performed better than Random Forest by only a small margin (Fig. <a href="#S7.F18" title="Figure 18 ‣ Overview ‣ 7 Comparison ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">18</span></a>), about 2-3%. This difference is quite small and it might not be statistically relevant. In Figure <a href="#S7.F19" title="Figure 19 ‣ Overview ‣ 7 Comparison ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">19</span></a>, we can see how the errors are most of the time the mislabelled census tracts overlap: the two algorithms perform almost the same and with the same behaviour. Amongst the qualities of Random Forest, the simplicity of implementation and the relatively low number of parameters to be set are generally mentioned as advantages.</p>
+</div>
+<figure id="S7.F19" class="ltx_figure"><img src="content/project2/img/x26.png" id="S7.F19.g1" class="ltx_graphics ltx_centering" width="320" height="412" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 19: </span>Overlap of the results.</figcaption>
+</figure>
+<div id="S7.SSx1.p2" class="ltx_para">
+<p class="ltx_p">Furthermore, Random Forest can take categorical variables and it is usually a fast performer. SVM performs well when there is a high number of dimensions (it is used, for example, in text classification) and is very adaptable because it can use a vast number of kernel functions. On the other hand, this means a lot of parameters and different functions to choose from make the implementation more complex. It also requires the categorical variables to be split into multiple binary variables, which can be daunting when the categories are more than two or three. On the plus side, SVM can be used in regression analysis.
+For the purpose of this experiment, the running time turned out not to be an issue and the training time was almost always within a minute. Both model have to be run several time: RF to average the results, and SVM to calibrate the parameters by means of search grid. With SVM, when used with a polynomial kernel, the training time grows from few minutes to hours without much improvement in the results. Overall in the case considered here, if the accuracy of the results is the priority, SVM is the best choice. On the other hand, where simplicity and time are the priorities, Random Forest would probably be a better solution.</p>
+</div>
+</section>
+<section id="S7.SSx2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Limitations and further studies</h3>
+
+<div id="S7.SSx2.p1" class="ltx_para">
+<p class="ltx_p">The experiment was designed at the beginning as a tool to predict crime in the short term using variables that can be monitored on a daily or hourly basis. Based on literature review and data analysis which suggest seasonality, temperature and precipitation were considered as possible candidates. It turned out that there is little or no direct connection between crime and weather in our datasets, therefore we decided to redesign the experiment to create a tool to predict crime levels on the long term for resource allocation from one year to the next. We decided to aggregate the data by seasons but it would be interesting to predict by the month. As a first step to improve the model, the training data should be extended to cover more years rather than just the three used here. These would also reduce the risk of overfitting, which we suspect is at work in our case. It would also be interesting to train the data on other American cities, possibly assigning categories to census tracts about the primary and secondary activity of the area and the presence of other features such as museums, harbours, monuments, etc.
+The ACS survey contains a high number of variables; a further exploration of these variables would certainly increase the accuracy. The level of unemployment is monitored on a monthly basis by the US Bureau of Labor Statistics and could therefore be included at a finer scale, say by season rather than yearly. Another interesting addition would be to include the level of police forces on the territory from the past years to include the interaction between crime level and police patrolling level. These would make the tool more useful, as it would introduce a feedbak to the resource allocation and could be used to assess policies.
+For all these improvements, it is likely that Random Forest would be our choice because of the handling of categories, the ease of implementation and the possibility to determine the relative importance of the variables in the classification process.
+</p>
+</div>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</section>
+</section>
+<section id="S8" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">8 </span>Appendix</h2>
+
+<section id="S8.SSx1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Random Forest result plots</h3>
+
+<figure id="S8.F20" class="ltx_figure"><img src="content/project2/img/x27.png" id="S8.F20.g1" class="ltx_graphics ltx_centering" width="1254" height="469" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 20: </span></figcaption>
+</figure>
+<figure id="S8.F21" class="ltx_figure"><img src="content/project2/img/x28.png" id="S8.F21.g1" class="ltx_graphics ltx_centering" width="1254" height="469" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 21: </span></figcaption>
+</figure>
+<figure id="S8.F22" class="ltx_figure"><img src="content/project2/img/x29.png" id="S8.F22.g1" class="ltx_graphics ltx_centering" width="1254" height="469" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 22: </span></figcaption>
+</figure>
+<figure id="S8.F23" class="ltx_figure"><img src="content/project2/img/x30.png" id="S8.F23.g1" class="ltx_graphics ltx_centering" width="1254" height="469" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 23: </span></figcaption>
+</figure>
+<figure id="S8.F24" class="ltx_figure"><img src="content/project2/img/x31.png" id="S8.F24.g1" class="ltx_graphics ltx_centering" width="938" height="742" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 24: </span></figcaption>
+</figure>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</section>
+<section id="S8.SSx2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">SVM result plots</h3>
+
+<figure id="S8.F25" class="ltx_figure"><img src="content/project2/img/x32.png" id="S8.F25.g1" class="ltx_graphics ltx_centering" width="525" height="438" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 25: </span></figcaption>
+</figure>
+<figure id="S8.F26" class="ltx_figure"><img src="content/project2/img/x33.png" id="S8.F26.g1" class="ltx_graphics ltx_centering" width="525" height="219" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 26: </span></figcaption>
+</figure>
+<figure id="S8.F27" class="ltx_figure"><img src="content/project2/img/x34.png" id="S8.F27.g1" class="ltx_graphics ltx_centering" width="525" height="438" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 27: </span></figcaption>
+</figure>
+<figure id="S8.F28" class="ltx_figure"><img src="content/project2/img/x35.png" id="S8.F28.g1" class="ltx_graphics ltx_centering" width="525" height="219" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 28: </span></figcaption>
+</figure>
+<figure id="S8.F29" class="ltx_figure"><img src="content/project2/img/x36.png" id="S8.F29.g1" class="ltx_graphics ltx_centering" width="525" height="438" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 29: </span></figcaption>
+</figure>
+<figure id="S8.F30" class="ltx_figure"><img src="content/project2/img/x37.png" id="S8.F30.g1" class="ltx_graphics ltx_centering" width="525" height="219" alt="">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 30: </span></figcaption>
+</figure>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</section>
+<section id="S8.SSx3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">ACS variables</h3>
+
+<figure id="S8.SSx3.fig1" class="ltx_figure"><img src="content/project2/img/x38.png" id="S8.SSx3.g1" class="ltx_graphics ltx_centering" width="1313" height="1094" alt="">
+</figure>
+<figure id="S8.SSx3.fig2" class="ltx_figure"><img src="content/project2/img/x39.png" id="S8.SSx3.g2" class="ltx_graphics ltx_centering" width="1313" height="1094" alt="">
+</figure>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</section>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h3 class="ltx_title ltx_title_bibliography">References</h3>
+
+<ul id="L1" class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">A. Aizerman, E. M. Braverman and L. Rozoner (1964)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Theoretical foundations of the potential function method in pattern recognition learning</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Automation and remote control</span> <span class="ltx_text ltx_bib_volume">25</span>, <span class="ltx_text ltx_bib_pages"> pp. 821–837</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S6.SSx1.p1" title="The algorithm ‣ 6 SVM - by Duccio Aiazzi ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>.
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">L. Anselin, J. Cohen, D. Cook, W. Gorr and G. Tita (2000)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Spatial analyses of crime</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Criminal justice</span> <span class="ltx_text ltx_bib_volume">4</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 213–262</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S2.p1" title="2 Methods ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem ltx_bib_inproceedings">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">A. Bogomolov, B. Lepri, J. Staiano, N. Oliver, F.  and A. Pentland (2014)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Once upon a crime: towards crime prediction from demographics and mobile data</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 16th international conference on multimodal interaction</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 427–434</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S2.p2" title="2 Methods ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem ltx_bib_inproceedings">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">B. E. Boser, I. M. Guyon and V. N. Vapnik (1992)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A training algorithm for optimal margin classifiers</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the fifth annual workshop on Computational learning theory</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 144–152</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S6.SSx1.p1" title="The algorithm ‣ 6 SVM - by Duccio Aiazzi ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>.
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem ltx_bib_misc">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">L. Breiman and A. Cutler (2015)</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a href="%5Curlhttps://www.stat.berkeley.edu/~breiman/RandomForests/cc_papers.htm" title="" class="ltx_ref ltx_bib_external">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S5.SSx1.p2" title="Overview ‣ 5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>.
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">L. Breiman (2001)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Random forests</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Machine learning</span> <span class="ltx_text ltx_bib_volume">45</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 5–32</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1" title="1 Introduction ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>,
+<a href="#S5.SSx1.p1" title="Overview ‣ 5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>,
+<a href="#S5.SSx3.p1" title="Analysis and Results ‣ 5 Random Forest - by Sarah Hank ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>.
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem ltx_bib_misc">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">M. Breitenbach, W. Dieterich, T. Brennan and A. Fan (2009)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Creating risk-scores in very imbalanced datasets–predicting extremely violent crime among criminal offenders following release from prison</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Chapter in forthcoming book</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S2.p2" title="2 Methods ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">E. G. Cohn (1990)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Weather and crime</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">British journal of criminology</span> <span class="ltx_text ltx_bib_volume">30</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 51–64</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S3.p2" title="3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">C. Cortes and V. Vapnik (1995)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Support-vector networks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Machine learning</span> <span class="ltx_text ltx_bib_volume">20</span> (<span class="ltx_text ltx_bib_number">3</span>), <span class="ltx_text ltx_bib_pages"> pp. 273–297</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S6.SSx1.p1" title="The algorithm ‣ 6 SVM - by Duccio Aiazzi ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>.
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem ltx_bib_incollection">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">I. Ehrlich (1975)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">On the relation between education and crime</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Education, income, and human behavior</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 313–338</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S3.p3" title="3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem ltx_bib_book">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">L. Ellis, K. M. Beaver and J. Wright (2009)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Handbook of crime correlates</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Academic Press</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S3.p3" title="3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">M. Fernández-Delgado, E. Cernadas, S. Barro and D.  (2014)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Do we need hundreds of classifiers to solve real world classification problems?</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">The Journal of Machine Learning Research</span> <span class="ltx_text ltx_bib_volume">15</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 3133–3181</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S2.p1" title="2 Methods ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>,
+<a href="#S7.SSx1.p1" title="Overview ‣ 7 Comparison ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a>.
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">K. Kianmehr and R. Alhajj (2008)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Effectiveness of support vector machine for crime hot-spots prediction</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Applied Artificial Intelligence</span> <span class="ltx_text ltx_bib_volume">22</span> (<span class="ltx_text ltx_bib_number">5</span>), <span class="ltx_text ltx_bib_pages"> pp. 433–458</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S2.p2" title="2 Methods ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem ltx_bib_misc">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">Metropolitan Police Department (2008)</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a href="http://crimemap.dc.gov/" title="" class="ltx_ref ltx_bib_external">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S3.p1" title="3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">A. Olligschlaeger and W. Gorr (1997)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Spatio-temporal forecasting of crime</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S2.p1" title="2 Methods ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">E. B. Patterson (1991)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Poverty, income inequality, and community crime rates</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Criminology</span> <span class="ltx_text ltx_bib_volume">29</span> (<span class="ltx_text ltx_bib_number">4</span>), <span class="ltx_text ltx_bib_pages"> pp. 755–776</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S3.p3" title="3 Data ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem ltx_bib_misc">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">StatSoft (2015)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Support Vector Machine</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a href="http://www.statsoft.com/textbook/support-vector-machines" title="" class="ltx_ref ltx_bib_external">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S6.SSx2.p1" title="Analysis and Results ‣ 6 SVM - by Duccio Aiazzi ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>.
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">V. N. Vapnik and A. J. Chervonenkis (1974)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Theory of pattern recognition</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1" title="1 Introduction ‣ Predicting crime levels in Washington DC with machine learning" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<footer class="ltx_page_footer">
+<div class="ltx_page_logo">Generated  on Mon Mar 13 22:08:22 2017 by <a href="http://dlmf.nist.gov/LaTeXML/">LaTeXML <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="[LOGO]"></a>
+</div></footer>
+</div>
+</body>
+</html>

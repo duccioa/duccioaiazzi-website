@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>A tool for the calculation of the compactness of city blocks in R</title>
+    <!--Generated on Mon Mar 13 21:42:24 2017 by LaTeXML (version 0.8.2) http://dlmf.nist.gov/LaTeXML/.-->
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+</head>
+
+<body>
+    <div class="ltx_page_main">
+        <div class="ltx_page_content">
+            <article class="ltx_document ltx_authors_1line">
+
+
+
+
+                <section id="Sx1" class="ltx_section">
+                    <h3 class="ltx_title ltx_title_section">Summary</h3>
+
+                    <div id="Sx1.p1" class="ltx_abstract">
+                        <p class="ltx_p_abstract">The R function FUN_SPDF_Cmi_Index.R calculates the index of compactness based on the Second Moment of Inertia of a set of polygons. It has been developed in the context of urban morphology, as a tool to be used in the analysis of street typology of cities. The function takes as an input a set of polygons in the form of a SpatialPolygonDataFrame (SPDF), which is a class of elements of the package “sp”. The output is the same SPDF with two added columns containing the area and the index of compactness <math id="Sx1.p1.m1" class="ltx_Math" alttext="C_{MI}" display="inline"><msub><mi>C</mi><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></msub></math> of each polygon. In the final sections, the function is used to analyse the geometry of the street blocks of Greater London</p>
+                    </div>
+
+                    <div class="ltx_pagination ltx_role_newpage"></div>
+                    <div class="ltx_TOC ltx_role_contents">
+                        <h4>Contents:</h4>
+                        <ul class="ltx_toclist">
+                            <li class="ltx_tocentry ltx_tocentry_section"><a href="#S1" title="1 Context ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Context</span></a></li>
+                            <li class="ltx_tocentry ltx_tocentry_section"><a href="#S2" title="2 Data ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Data</span></a></li>
+                            <li class="ltx_tocentry ltx_tocentry_section"><a href="#S3" title="3 The Tool: FUN_SPDF_Cmi_Index.R ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>The Tool: FUN_SPDF_Cmi_Index.R</span></a></li>
+                            <li class="ltx_tocentry ltx_tocentry_section"><a href="#S4" title="4 Calculation of the index of compactness b C M I ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Calculation of the index of compactness <math class="ltx_Math" alttext="C_{M}I" display="inline"><mrow><msub><mi>C</mi><mi>M</mi></msub><mo>b</mo><mi>I</mi></mrow></math></span></a></li>
+                            <li class="ltx_tocentry ltx_tocentry_section"><a href="#S5" title="5 Analysis ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Analysis</span></a></li>
+                            <li class="ltx_tocentry ltx_tocentry_section"><a href="#S6" title="6 Future research ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>Future research</span></a></li>
+                            <li class="ltx_tocentry ltx_tocentry_section"><a href="#S7" title="7 Appendix ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7 </span>Appendix</span></a></li>
+                        </ul>
+                    </div>
+                    <div class="ltx_pagination ltx_role_newpage"></div>
+                </section>
+
+                <section id="S1" class="ltx_section">
+                    <h2 class="ltx_title ltx_title_section">
+                        <span class="ltx_tag ltx_tag_section">1 </span>Context</h2>
+
+                    <div id="S1.p1" class="ltx_para">
+                        <p class="ltx_p">The street network is an important component of cities: it emerges from the underlying processes at play in the formation and evolution of the city and it is the subject of different types of analyses in different fields. In urban morphology, the road network is used as a schematic view of the city which captures the relationships between locations and between location and the whole. The street network can be approximated fairly well with a planar graph, that is, a network graph that can be embedded in a plane. Different classifications of street networks have been proposed <cite class="ltx_cite ltx_citemacro_citep">(Lopes Gil, <a href="#bib.bib3" title="Analyzing the configuration of multimodal urban networks" class="ltx_ref">2014</a>; Marshall, <a href="#bib.bib8" title="Streets and patterns" class="ltx_ref">2004</a>)</cite> as well as different analysis tools <cite class="ltx_cite ltx_citemacro_citep">(Hillier and Hanson, <a href="#bib.bib6" title="The social logic of space" class="ltx_ref">1984</a>)</cite>. <cite class="ltx_cite ltx_citemacro_cite">Louf and Barthélemy (<a href="#bib.bib4" title="A typology of street patterns" class="ltx_ref">2014</a>)</cite> propose a classification based on a “fingerprint” of the cities defined by the conditional distribution of the areas of the cells and their compactness. The underlying rationale is that the road network graph, because it is the representation of a physical phenomenon, contains information not at the topology level only but in its geometry. The geometry of the network is the set of polygons defined by the vertexes or nodes of the network: these are called cells or faces and they correspond to the city blocks.
+                            <br class="ltx_break">Roads can be defined in many ways such as the segments between two intersection, as a visual axis <cite class="ltx_cite ltx_citemacro_citep">(Hillier and Hanson, <a href="#bib.bib6" title="The social logic of space" class="ltx_ref">1984</a>)</cite> or could follow the road names. On the other hand, blocks are unambiguously defined as “the smallest area delimited by roads” <cite class="ltx_cite ltx_citemacro_citep">(Louf and Barthélemy, <a href="#bib.bib4" title="A typology of street patterns" class="ltx_ref">2014</a>)</cite>. <cite class="ltx_cite ltx_citemacro_cite">Louf and Barthélemy (<a href="#bib.bib4" title="A typology of street patterns" class="ltx_ref">2014</a>)</cite> performed their analysis and classification across many cities, using the ratio between the area of the polygon and the area of the circumscribed circle as a measure of compactness. For the purpose of this essay, I am interested in the classification at the local level, not as an average of the city, in order to investigate whether local neighbourhoods have their own fingerprints. I will also be using a different index of compactness, as described by <cite class="ltx_cite ltx_citemacro_cite">Li<span class="ltx_text ltx_bib_etal"> et al.</span> (<a href="#bib.bib9" title="An efficient measure of compactness for two-dimensional shapes and its application in regionalization problems" class="ltx_ref">2013</a>)</cite>, that is the measure based on the second moment of inertia of a shape <math id="S1.p1.m1" class="ltx_Math" alttext="C_{MI}" display="inline"><msub><mi>C</mi><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></msub></math>.</p>
+                    </div>
+                </section>
+                <section id="S2" class="ltx_section">
+                    <h2 class="ltx_title ltx_title_section">
+                        <span class="ltx_tag ltx_tag_section">2 </span>Data</h2>
+
+                    <figure id="S2.F1" class="ltx_figure"><img src="./content/project4/x1.jpg" id="S2.F1.g1" class="ltx_graphics ltx_centering" width="100%" alt="">
+                        <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>London road network cells</figcaption>
+
+                    </figure>
+                    <div id="S2.p1" class="ltx_para">
+                        <p class="ltx_p">The data used to perform and optimise the tool has been kindly provided by Rémi Louf of the Institut de Physique Théorique CEA. It is the set of polygons of London blocks obtained by processing the road shape file downloaded from the OpenStreetMap database. It comes in the form of a shape file and it is imported in R with the function readOGR of the package ”rgdal”.
+                            <br class="ltx_break">The method <cite class="ltx_cite ltx_citemacro_cite">Louf and Barthélemy (<a href="#bib.bib4" title="A typology of street patterns" class="ltx_ref">2014</a>)</cite> have used to extract the polygons is the “always-left-hand” rule: it consists of selecting a random line and move to the next connected line always taking the one most to the left (or right) in case more than one lines are available until the loop is closed.</p>
+                    </div>
+                </section>
+                <section id="S3" class="ltx_section">
+                    <h2 class="ltx_title ltx_title_section">
+                        <span class="ltx_tag ltx_tag_section">3 </span>The Tool: FUN_SPDF_Cmi_Index.R</h2>
+
+                    <div id="S3.p1" class="ltx_para">
+                        <p class="ltx_p">The function FUN_SPDF_Cmi_Index.R has been designed to be used on polygons representing city blocks but it works for any polygon, not necessarily from a city map. It takes as an input a SpatialPolygonDataFrame (a class of geometrical object of the package “sp”) and returns the same object with two columns added: the area and the index of compactness <math id="S3.p1.m1" class="ltx_Math" alttext="C_{MI}" display="inline"><msub><mi>C</mi><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></msub></math> for each polygon (FIg. <a href="#S7.SSx2" title="Function Diagram ‣ 7 Appendix ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a> in the Appendix). This first function is the shell that calls all the other functions and puts together the results. It is also used to iterate the calculation in parallel, allowing the possibility of choosing multiple cores, depending on the machine used, in order to speed up the calculation. This passage is necessary if we want to take advantage of multicore processors, otherwise R performs the calculations using a single core only. The function FUN_Polygon_Cmi.R extracts the information to be fed to FUN_calc_Cmi_index.R, which calculates the index <math id="S3.p1.m2" class="ltx_Math" alttext="C_{MI}" display="inline"><msub><mi>C</mi><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></msub></math> for each polygon of the dataset.</p>
+                    </div>
+                </section>
+                <section id="S4" class="ltx_section">
+                    <h2 class="ltx_title ltx_title_section">
+                        <span class="ltx_tag ltx_tag_section">4 </span>Calculation of the index of compactness <math id="S4.m1" class="ltx_Math" alttext="C_{M}I" display="inline"><mrow><msub><mi>C</mi><mi>M</mi></msub><mo>b</mo><mi>I</mi></mrow></math>
+                    </h2>
+
+                    <div id="S4.p1" class="ltx_para">
+                        <p class="ltx_p">The index of compactness <math id="S4.p1.m1" class="ltx_Math" alttext="C_{MI}" display="inline"><msub><mi>C</mi><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></msub></math> is a measure of the dispersion of the components of a shape. It requires the calculation of the second moment of inertia of an area about its centroid <math id="S4.p1.m2" class="ltx_Math" alttext="g" display="inline"><mi>g</mi></math>, as follows:</p>
+                        <table id="S4.E1" class="ltx_equation ltx_eqn_table">
+
+                            <tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+                                <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+                                <td class="ltx_eqn_cell ltx_align_center"><math id="S4.E1.m1" class="ltx_Math" alttext="I_{g}=\int z_{g}^{2}\,da" display="block"><mrow><msub><mi>I</mi><mi>g</mi></msub><mo>=</mo><mrow><mo largeop="true" symmetric="true">∫</mo><mrow><mpadded width="+1.7pt"><msubsup><mi>z</mi><mi>g</mi><mn>2</mn></msubsup></mpadded><mo>b</mo><mrow><mo>𝑑</mo><mi>a</mi></mrow></mrow></mrow></mrow></math></td>
+                                <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+                                <td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+                            </tr>
+                        </table>
+                        <p class="ltx_p">The centroid of a shape in strict mathematical terms is the point that minimises the moment of inertia <math id="S4.p1.m3" class="ltx_Math" alttext="MI" display="inline"><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></math> for that shape. <math id="S4.p1.m4" class="ltx_Math" alttext="C_{MI}" display="inline"><msub><mi>C</mi><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></msub></math> is calculated as the ratio of the <math id="S4.p1.m5" class="ltx_Math" alttext="MI" display="inline"><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></math> of a circle of the same area about its centre, to the <math id="S4.p1.m6" class="ltx_Math" alttext="MI" display="inline"><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></math> of the shape about its centroid. Its range is between 0 and 1: a circle has a value of 1 and values closer to 1 mean more compactness. It is calculated as follows:</p>
+                        <table id="S4.E2" class="ltx_equation ltx_eqn_table">
+
+                            <tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+                                <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+                                <td class="ltx_eqn_cell ltx_align_center"><math id="S4.E2.m1" class="ltx_Math" alttext="C_{MI}=\frac{A^{2}}{2\pi I_{g}}" display="block"><mrow><msub><mi>C</mi><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></msub><mo>=</mo><mfrac><msup><mi>A</mi><mn>2</mn></msup><mrow><mn>2</mn><mo>b</mo><mi>π</mi><mo>b</mo><msub><mi>I</mi><mi>g</mi></msub></mrow></mfrac></mrow></math></td>
+                                <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+                                <td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <figure id="S4.F2" class="ltx_figure"><img src="./content/project4/x2.png" id="S4.F2.g1" class="ltx_graphics ltx_centering" width="100%" alt="">
+                        <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>A polygon, showing the trapezia built on one of its edges</figcaption>
+                    
+                    </figure>
+                    <div id="S4.p2" class="ltx_para">
+                        <p class="ltx_p">The method proposed by <cite class="ltx_cite ltx_citemacro_cite">Li<span class="ltx_text ltx_bib_etal"> et al.</span> (<a href="#bib.bib9" title="An efficient measure of compactness for two-dimensional shapes and its application in regionalization problems" class="ltx_ref">2013</a>)</cite> to calculate the <math id="S4.p2.m1" class="ltx_Math" alttext="MI" display="inline"><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></math> is a trapezium-based approach (see Fig.<a href="#S4.F2" title="Figure 2 ‣ 4 Calculation of the index of compactness b C M I ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>). It consists in taking each edge of the polygon <math id="S4.p2.m2" class="ltx_Math" alttext="K" display="inline"><mi>K</mi></math> and building a trapezium composed by the two vertical projections of the two vertexes on the x-axis, the length of the edge on the x-axis and the edge itself. This trapezium can be decomposed in a triangle and a rectangle: the formulas to calculate the <math id="S4.p2.m3" class="ltx_Math" alttext="MI" display="inline"><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></math> of triangles and rectangles are known (<a href="#S4.E5" title="(5) ‣ 4 Calculation of the index of compactness b C M I ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>) (<a href="#S4.E8" title="(8) ‣ 4 Calculation of the index of compactness b C M I ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a>) and these can be recomposed to calculate the <math id="S4.p2.m4" class="ltx_Math" alttext="MI" display="inline"><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></math> of the trapezia and the <math id="S4.p2.m5" class="ltx_Math" alttext="MI" display="inline"><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></math> of the trapezia to calculate the one of the polygon (<a href="#S4.E12" title="(12) ‣ 4 Calculation of the index of compactness b C M I ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">12</span></a>). For the triangle the calculations are as follows:</p>
+                    </div>
+                    <div id="S4.p3" class="ltx_para">
+                        <table id="S4.E3" class="ltx_equation ltx_eqn_table">
+
+                            <tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+                                <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+                                <td class="ltx_eqn_cell ltx_align_center"><math id="S4.E3.m1" class="ltx_Math" alttext="a_{i\_T}=(x_{i+1}-x_{i})(y_{i+1}-y_{i})/2" display="block"><mrow><msub><mi>a</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow></msub><mo>=</mo><mrow><mrow><mrow><mo stretchy="false">(</mo><mrow><msub><mi>x</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>-</mo><msub><mi>x</mi><mi>i</mi></msub></mrow><mo stretchy="false">)</mo></mrow><mo>b</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>y</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>-</mo><msub><mi>y</mi><mi>i</mi></msub></mrow><mo stretchy="false">)</mo></mrow></mrow><mo>/</mo><mn>2</mn></mrow></mrow></math></td>
+                                <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+                                <td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="S4.p4" class="ltx_para">
+                        <table id="S4.E4" class="ltx_equation ltx_eqn_table">
+
+                            <tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+                                <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+                                <td class="ltx_eqn_cell ltx_align_center"><math id="S4.E4.m1" class="ltx_Math" alttext="x^{i}_{g\_T}=(x_{i}+2x_{i+1})/3,\hskip 11.381102pty^{i}_{g\_T}=(y_{i}+2y_{i+1}%
+)/3" display="block"><mrow><mrow><msubsup><mi>x</mi><mrow><mi>g</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow><mi>i</mi></msubsup><mo>=</mo><mrow><mrow><mo stretchy="false">(</mo><mrow><msub><mi>x</mi><mi>i</mi></msub><mo>+</mo><mrow><mn>2</mn><mo>b</mo><msub><mi>x</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow></mrow><mo stretchy="false">)</mo></mrow><mo>/</mo><mn>3</mn></mrow></mrow><mo rspace="13.9pt">,</mo><mrow><msubsup><mi>y</mi><mrow><mi>g</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow><mi>i</mi></msubsup><mo>=</mo><mrow><mrow><mo stretchy="false">(</mo><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>+</mo><mrow><mn>2</mn><mo>b</mo><msub><mi>y</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow></mrow><mo stretchy="false">)</mo></mrow><mo>/</mo><mn>3</mn></mrow></mrow></mrow></math></td>
+                                <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+                                <td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="S4.p5" class="ltx_para">
+                        <table id="S4.E5" class="ltx_equation ltx_eqn_table">
+
+                            <tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+                                <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+                                <td class="ltx_eqn_cell ltx_align_center"><math id="S4.E5.m1" class="ltx_Math" alttext="I_{i\_T}=a_{i\_T}[(x_{i+1}-x_{i})^{2}+(y_{i+1}-y_{i})^{2}]/18" display="block"><mrow><msub><mi>I</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow></msub><mo>=</mo><mrow><mrow><msub><mi>a</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow></msub><mo>b</mo><mrow><mo stretchy="false">[</mo><mrow><msup><mrow><mo stretchy="false">(</mo><mrow><msub><mi>x</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>-</mo><msub><mi>x</mi><mi>i</mi></msub></mrow><mo stretchy="false">)</mo></mrow><mn>2</mn></msup><mo>+</mo><msup><mrow><mo stretchy="false">(</mo><mrow><msub><mi>y</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>-</mo><msub><mi>y</mi><mi>i</mi></msub></mrow><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></mrow><mo stretchy="false">]</mo></mrow></mrow><mo>/</mo><mn>18</mn></mrow></mrow></math></td>
+                                <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+                                <td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="S4.p6" class="ltx_para">
+                        <p class="ltx_p">For the rectangle:</p>
+                    </div>
+                    <div id="S4.p7" class="ltx_para">
+                        <table id="S4.E6" class="ltx_equation ltx_eqn_table">
+
+                            <tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+                                <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+                                <td class="ltx_eqn_cell ltx_align_center"><math id="S4.E6.m1" class="ltx_Math" alttext="a_{i\_R}=(x_{i+1}-x_{i})y_{i}" display="block"><mrow><msub><mi>a</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow></msub><mo>=</mo><mrow><mrow><mo stretchy="false">(</mo><mrow><msub><mi>x</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>-</mo><msub><mi>x</mi><mi>i</mi></msub></mrow><mo stretchy="false">)</mo></mrow><mo>b</mo><msub><mi>y</mi><mi>i</mi></msub></mrow></mrow></math></td>
+                                <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+                                <td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(6)</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="S4.p8" class="ltx_para">
+                        <table id="S4.E7" class="ltx_equation ltx_eqn_table">
+
+                            <tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+                                <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+                                <td class="ltx_eqn_cell ltx_align_center"><math id="S4.E7.m1" class="ltx_Math" alttext="x^{i}_{g\_R}=(x_{i}+x_{i+1})/2,\hskip 11.381102pty^{i}_{g\_R}=y_{1}/2" display="block"><mrow><mrow><msubsup><mi>x</mi><mrow><mi>g</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow><mi>i</mi></msubsup><mo>=</mo><mrow><mrow><mo stretchy="false">(</mo><mrow><msub><mi>x</mi><mi>i</mi></msub><mo>+</mo><msub><mi>x</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow><mo stretchy="false">)</mo></mrow><mo>/</mo><mn>2</mn></mrow></mrow><mo rspace="13.9pt">,</mo><mrow><msubsup><mi>y</mi><mrow><mi>g</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow><mi>i</mi></msubsup><mo>=</mo><mrow><msub><mi>y</mi><mn>1</mn></msub><mo>/</mo><mn>2</mn></mrow></mrow></mrow></math></td>
+                                <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+                                <td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(7)</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="S4.p9" class="ltx_para">
+                        <table id="S4.E8" class="ltx_equation ltx_eqn_table">
+
+                            <tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+                                <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+                                <td class="ltx_eqn_cell ltx_align_center"><math id="S4.E8.m1" class="ltx_Math" alttext="I_{i\_R}=a_{i\_R}[(x_{i+1}-x_{i})^{2}+y_{i}^{2}]/12" display="block"><mrow><msub><mi>I</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow></msub><mo>=</mo><mrow><mrow><msub><mi>a</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow></msub><mo>b</mo><mrow><mo stretchy="false">[</mo><mrow><msup><mrow><mo stretchy="false">(</mo><mrow><msub><mi>x</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>-</mo><msub><mi>x</mi><mi>i</mi></msub></mrow><mo stretchy="false">)</mo></mrow><mn>2</mn></msup><mo>+</mo><msubsup><mi>y</mi><mi>i</mi><mn>2</mn></msubsup></mrow><mo stretchy="false">]</mo></mrow></mrow><mo>/</mo><mn>12</mn></mrow></mrow></math></td>
+                                <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+                                <td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(8)</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="S4.p10" class="ltx_para">
+                        <p class="ltx_p">where <math id="S4.p10.m1" class="ltx_Math" alttext="(x^{i}_{g},y^{i}_{g})" display="inline"><mrow><mo stretchy="false">(</mo><msubsup><mi>x</mi><mi>g</mi><mi>i</mi></msubsup><mo>,</mo><msubsup><mi>y</mi><mi>g</mi><mi>i</mi></msubsup><mo stretchy="false">)</mo></mrow></math> is the centroid, <math id="S4.p10.m2" class="ltx_Math" alttext="a_{i}" display="inline"><msub><mi>a</mi><mi>i</mi></msub></math> is an area and <math id="S4.p10.m3" class="ltx_Math" alttext="I_{i}" display="inline"><msub><mi>I</mi><mi>i</mi></msub></math> is the <math id="S4.p10.m4" class="ltx_Math" alttext="MI" display="inline"><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></math> of each piece. Note that, because areas are calculated using coordinates (<a href="#S4.E3" title="(3) ‣ 4 Calculation of the index of compactness b C M I ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>) (<a href="#S4.E6" title="(6) ‣ 4 Calculation of the index of compactness b C M I ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>), they are negatives if the piece falls below or completely outside of the polygon. The calculation of the <math id="S4.p10.m5" class="ltx_Math" alttext="MI" display="inline"><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></math> for the whole polygon <math id="S4.p10.m6" class="ltx_Math" alttext="K" display="inline"><mi>K</mi></math> is obtained by combining all triangles and rectangles built on all of its edges:</p>
+                    </div>
+                    <div id="S4.p11" class="ltx_para">
+                        <table id="S4.E9" class="ltx_equation ltx_eqn_table">
+
+                            <tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+                                <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+                                <td class="ltx_eqn_cell ltx_align_center"><math id="S4.E9.m1" class="ltx_Math" alttext="A_{p}=\sum_{i=1}^{n}(a_{i\_T}+a_{i\_R})" display="block"><mrow><msub><mi>A</mi><mi>p</mi></msub><mo>=</mo><mrow><munderover><mo largeop="true" movablelimits="false" symmetric="true">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mrow><mo stretchy="false">(</mo><mrow><msub><mi>a</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow></msub><mo>+</mo><msub><mi>a</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow></msub></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow></math></td>
+                                <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+                                <td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(9)</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="S4.p12" class="ltx_para">
+                        <table id="S4.E10" class="ltx_equation ltx_eqn_table">
+
+                            <tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+                                <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+                                <td class="ltx_eqn_cell ltx_align_center"><math id="S4.E10.m1" class="ltx_Math" alttext="x_{g}=\sum_{i=1}^{n}\frac{(x^{i}_{g\_R}a_{i\_R}+x^{i}_{g\_T}a_{i\_T})}{A_{p}},%
+\hskip 11.381102pty_{g}=\sum_{i=1}^{n}\frac{(y^{i}_{g\_R}a_{i\_R}+y^{i}_{g\_T}%
+a_{i\_T})}{A_{p}}" display="block"><mrow><mrow><msub><mi>x</mi><mi>g</mi></msub><mo>=</mo><mrow><munderover><mo largeop="true" movablelimits="false" symmetric="true">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mfrac><mrow><mo stretchy="false">(</mo><mrow><mrow><msubsup><mi>x</mi><mrow><mi>g</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow><mi>i</mi></msubsup><mo>b</mo><msub><mi>a</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow></msub></mrow><mo>+</mo><mrow><msubsup><mi>x</mi><mrow><mi>g</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow><mi>i</mi></msubsup><mo>b</mo><msub><mi>a</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow></msub></mrow></mrow><mo stretchy="false">)</mo></mrow><msub><mi>A</mi><mi>p</mi></msub></mfrac></mrow></mrow><mo rspace="13.9pt">,</mo><mrow><msub><mi>y</mi><mi>g</mi></msub><mo>=</mo><mrow><munderover><mo largeop="true" movablelimits="false" symmetric="true">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mfrac><mrow><mo stretchy="false">(</mo><mrow><mrow><msubsup><mi>y</mi><mrow><mi>g</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow><mi>i</mi></msubsup><mo>b</mo><msub><mi>a</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow></msub></mrow><mo>+</mo><mrow><msubsup><mi>y</mi><mrow><mi>g</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow><mi>i</mi></msubsup><mo>b</mo><msub><mi>a</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow></msub></mrow></mrow><mo stretchy="false">)</mo></mrow><msub><mi>A</mi><mi>p</mi></msub></mfrac></mrow></mrow></mrow></math></td>
+                                <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+                                <td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(10)</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="S4.p13" class="ltx_para">
+                        <p class="ltx_p">According to the parallel axis theorem <cite class="ltx_cite ltx_citemacro_citep">(Landau<span class="ltx_text ltx_bib_etal"> et al.</span>, <a href="#bib.bib10" title="Electrodynamics of continuous media" class="ltx_ref">1984</a>)</cite>, the <math id="S4.p13.m1" class="ltx_Math" alttext="MI" display="inline"><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></math> about any point <math id="S4.p13.m2" class="ltx_Math" alttext="s" display="inline"><mi>s</mi></math> is related to the <math id="S4.p13.m3" class="ltx_Math" alttext="MI" display="inline"><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></math> about the centroid <math id="S4.p13.m4" class="ltx_Math" alttext="g" display="inline"><mi>g</mi></math> by:</p>
+                    </div>
+                    <div id="S4.p14" class="ltx_para">
+                        <table id="S4.E11" class="ltx_equation ltx_eqn_table">
+
+                            <tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+                                <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+                                <td class="ltx_eqn_cell ltx_align_center"><math id="S4.E11.m1" class="ltx_Math" alttext="I_{s}=I_{g}+d^{2}da" display="block"><mrow><msub><mi>I</mi><mi>s</mi></msub><mo>=</mo><mrow><msub><mi>I</mi><mi>g</mi></msub><mo>+</mo><mrow><msup><mi>d</mi><mn>2</mn></msup><mo>b</mo><mi>d</mi><mo>b</mo><mi>a</mi></mrow></mrow></mrow></math></td>
+                                <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+                                <td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(11)</span></td>
+                            </tr>
+                        </table>
+                        <p class="ltx_p">where <math id="S4.p14.m1" class="ltx_Math" alttext="d" display="inline"><mi>d</mi></math> is the distance of <math id="S4.p14.m2" class="ltx_Math" alttext="g" display="inline"><mi>g</mi></math> from the point <math id="S4.p14.m3" class="ltx_Math" alttext="s" display="inline"><mi>s</mi></math>. Adjusting the moments of inertia of all the rectangles and triangles to the polygon’s centroid gives <math id="S4.p14.m4" class="ltx_Math" alttext="I_{g}" display="inline"><msub><mi>I</mi><mi>g</mi></msub></math>:</p>
+                        <table id="S4.E12" class="ltx_equation ltx_eqn_table">
+
+                            <tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+                                <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+                                <td class="ltx_eqn_cell ltx_align_center"><math id="S4.E12.m1" class="ltx_Math" alttext="I_{g}=\sum_{i=1}^{n}(I_{i\_T}+d^{2}_{i\_T,g}A_{i\_T}+I_{i\_R}+d^{2}_{i\_R,g}A_%
+{i\_R})" display="block"><mrow><msub><mi>I</mi><mi>g</mi></msub><mo>=</mo><mrow><munderover><mo largeop="true" movablelimits="false" symmetric="true">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mrow><mo stretchy="false">(</mo><mrow><msub><mi>I</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow></msub><mo>+</mo><mrow><msubsup><mi>d</mi><mrow><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow><mo>,</mo><mi>g</mi></mrow><mn>2</mn></msubsup><mo>b</mo><msub><mi>A</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>T</mi></mrow></msub></mrow><mo>+</mo><msub><mi>I</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow></msub><mo>+</mo><mrow><msubsup><mi>d</mi><mrow><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow><mo>,</mo><mi>g</mi></mrow><mn>2</mn></msubsup><mo>b</mo><msub><mi>A</mi><mrow><mi>i</mi><mo>b</mo><mi mathvariant="normal">_</mi><mo>b</mo><mi>R</mi></mrow></msub></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow></math></td>
+                                <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+                                <td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(12)</span></td>
+                            </tr>
+                        </table>
+                        <p class="ltx_p">This can than be substituted in (<a href="#S4.E2" title="(2) ‣ 4 Calculation of the index of compactness b C M I ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>) to obtain the shape index.</p>
+                    </div>
+                </section>
+                <section id="S5" class="ltx_section">
+                    <h2 class="ltx_title ltx_title_section">
+                        <span class="ltx_tag ltx_tag_section">5 </span>Analysis</h2>
+
+                    <figure id="S5.F3" class="ltx_figure"><img src="./content/project4/x3.jpg" id="S5.F3.g1" class="ltx_graphics ltx_centering" width="100%" alt="">
+                        <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Blocks by <math id="S5.F3.m2" class="ltx_Math" alttext="C_{MI}" display="inline"><msub><mi>C</mi><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></msub></math> index</figcaption>
+                    </figure>
+                    <div id="S5.p1" class="ltx_para">
+                        <p class="ltx_p">My hypothesis is that, in historical neighbourhoods that developed incrementally in times when the prevalence of movements would happen by foot, the shape of the blocks would be more compact and the areas would be smaller. The phenomena of urbanisation that peaked during the second half of the <math id="S5.p1.m1" class="ltx_Math" alttext="20^{th}" display="inline"><msup><mn>20</mn><mrow><mi>t</mi><mo>b</mo><mi>h</mi></mrow></msup></math> century and the increase economic scale incentivised bigger one-off developments with the consequences of lager blocks. The increased reliance on cars as a mean of transportation would also require less efficient connectivity and decrease the demand for compact blocks.</p>
+                    </div>
+                    <figure id="S5.F4" class="ltx_figure"><img src="./content/project4/x4.jpg" id="S5.F4.g1" class="ltx_graphics ltx_centering" width="100%" alt="">
+                        <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Blocks by area</figcaption>
+                    </figure>
+                    <div id="S5.p2" class="ltx_para">
+                        <p class="ltx_p">In facts, the figure shows that blocks are larger in the outer parts of the city and smaller in the city centre (Fig.<a href="#S5.F4" title="Figure 4 ‣ 5 Analysis ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>) but the index of compactness seems to be evenly distributed and to show no sign of spatial pattern (Fig.<a href="#S5.F3" title="Figure 3 ‣ 5 Analysis ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>).</p>
+                    </div>
+                    <figure id="S5.F5" class="ltx_figure"><img src="./content/project4/x5.jpg" id="S5.F5.g1" class="ltx_graphics ltx_centering" width="100%" alt="">
+                        <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Clustering by coordinates, area and <math id="S5.F5.m2" class="ltx_Math" alttext="C_{MI}" display="inline"><msub><mi>C</mi><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></msub></math> index</figcaption>
+                    </figure>
+                    <div id="S5.p3" class="ltx_para">
+                        <p class="ltx_p">Figure <a href="#S5.F5" title="Figure 5 ‣ 5 Analysis ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> shows a k-means clustering using the normalised coordinates, the area and the index <math id="S5.p3.m1" class="ltx_Math" alttext="C_{MI}" display="inline"><msub><mi>C</mi><mrow><mi>M</mi><mo>b</mo><mi>I</mi></mrow></msub></math>: there is some sign of clustering of big shapes but they mostly correspond to parks. The Local Moran <math id="S5.p3.m2" class="ltx_Math" alttext="I_{i}" display="inline"><msub><mi>I</mi><mi>i</mi></msub></math> index (Fig.<a href="#S5.F6" title="Figure 6 ‣ 5 Analysis ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>) confirms that there is no pattern and although there is some evidence of both negative and positive <math id="S5.p3.m3" class="ltx_Math" alttext="I_{i}" display="inline"><msub><mi>I</mi><mi>i</mi></msub></math> values, none of them is statistically relevant.</p>
+                    </div>
+                    <figure id="S5.F6" class="ltx_figure">
+                        <table class="ltx_tabular ltx_centering ltx_align_middle">
+                            <tbody class="ltx_tbody">
+                                <tr class="ltx_tr">
+                                    <td class="ltx_td ltx_align_center"><img src="./content/project4/x6.jpg" id="S5.F6.g1" class="ltx_graphics" width="80%" alt=""></td>
+                                    <td class="ltx_td ltx_align_center"><img src="./content/project4/x7.jpg" id="S5.F6.g2" class="ltx_graphics" width="80%" alt=""></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Local Moran’s <math id="S5.F6.m2" class="ltx_Math" alttext="I_{i}" display="inline"><msub><mi>I</mi><mi>i</mi></msub></math> and adjusted p-values</figcaption>
+                       
+                    </figure>
+                </section>
+                <section id="S6" class="ltx_section">
+                    <h2 class="ltx_title ltx_title_section">
+                        <span class="ltx_tag ltx_tag_section">6 </span>Future research</h2>
+
+                    <div id="S6.p1" class="ltx_para">
+                        <p class="ltx_p">A quantitative classification of the morphology of different neighbourhoods is no trivial question. I believe the city block per se is not enough information to characterise the road network and that information about the built environment should be included in the analysis. In areas like the centres of Paris or London, where the environment is fully developed, the difference between buildings and city blocks might be minor, but as soon as we move out to the periphery and buildings are more dispersed, this difference might be more substantial. As further research, I would be interested in using the same tool on other cities but including the information about the buildings, possibly adapting the code to calculate a composed density index as suggested by <cite class="ltx_cite ltx_citemacro_cite">Pont and Haupt (<a href="#bib.bib13" title="The relation between urban form and density" class="ltx_ref">2007</a>)</cite>. This includes a ground space index, which is the percentage of land covered by buildings; an open-space ratio, which is the amount of non-built space at ground level per floorspace area; and the average number of floors in an area.</p>
+                    </div>
+                    <div class="ltx_pagination ltx_role_newpage"></div>
+                </section>
+                <section id="S7" class="ltx_section">
+                    <h2 class="ltx_title ltx_title_section">
+                        <span class="ltx_tag ltx_tag_section">7 </span>Appendix</h2>
+
+
+                    <section id="S7.SSx2" class="ltx_subsection">
+                        <h3 class="ltx_title ltx_title_subsection">Function Diagram</h3>
+
+                        <figure id="S7.SSx2.fig1" class="ltx_figure"><img src="./content/project4/x8.png" id="S7.SSx2.g1" class="ltx_graphics ltx_centering" width="100%" alt="">
+                        </figure>
+                        <div class="ltx_pagination ltx_role_newpage"></div>
+                    </section>
+                </section>
+                <section id="bib" class="ltx_bibliography">
+                    <h3 class="ltx_title ltx_title_bibliography">References</h3>
+
+                    <ul id="L1" class="ltx_biblist">
+                        <li id="bib.bib6" class="ltx_bibitem ltx_bib_book">
+                            <span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">B. Hillier and J. Hanson (1984)</span>
+                            <span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The social logic of space</span>.
+                            </span>
+                            <span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Cambridge university press</span>.
+                            </span>
+                            <span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1" title="1 Context ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.
+                            </span>
+                        </li>
+                        <li id="bib.bib10" class="ltx_bibitem ltx_bib_book">
+                            <span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">L. D. Landau, J. Bell, M. Kearsley, L. Pitaevskii, E.  and J. Sykes (1984)</span>
+                            <span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Electrodynamics of continuous media</span>.
+                            </span>
+                            <span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">8</span>, <span class="ltx_text ltx_bib_publisher">elsevier</span>.
+                            </span>
+                            <span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S4.p13" title="4 Calculation of the index of compactness b C M I ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>.
+                            </span>
+                        </li>
+                        <li id="bib.bib9" class="ltx_bibitem ltx_bib_article">
+                            <span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">W. Li, M. F. Goodchild and R. Church (2013)</span>
+                            <span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">An efficient measure of compactness for two-dimensional shapes and its application in regionalization problems</span>.
+                            </span>
+                            <span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">International Journal of Geographical Information Science</span> <span class="ltx_text ltx_bib_volume">27</span> (<span class="ltx_text ltx_bib_number">6</span>), <span class="ltx_text ltx_bib_pages"> pp. 1227–1250</span>.
+                            </span>
+                            <span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1" title="1 Context ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>,
+                            <a href="#S4.p2" title="4 Calculation of the index of compactness b C M I ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>.
+                            </span>
+                        </li>
+                        <li id="bib.bib3" class="ltx_bibitem ltx_bib_article">
+                            <span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">J. A. Lopes Gil (2014)</span>
+                            <span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Analyzing the configuration of multimodal urban networks</span>.
+                            </span>
+                            <span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Geographical Analysis: an international journal of theoretical geography IF - 1.500</span> <span class="ltx_text ltx_bib_volume">46</span> (<span class="ltx_text ltx_bib_number">4</span>), <span class="ltx_text ltx_bib_pages"> pp. 368–391</span>.
+                            </span>
+                            <span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1" title="1 Context ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.
+                            </span>
+                        </li>
+                        <li id="bib.bib4" class="ltx_bibitem ltx_bib_article">
+                            <span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">R. Louf and M. Barthélemy (2014)</span>
+                            <span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A typology of street patterns</span>.
+                            </span>
+                            <span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of the Royal Society Interface</span> <span class="ltx_text ltx_bib_volume">11</span> (<span class="ltx_text ltx_bib_number">20140924</span>), <span class="ltx_text ltx_bib_pages"> pp. 1–7</span>.
+                            </span>
+                            <span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1" title="1 Context ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>,
+                            <a href="#S2.p1" title="2 Data ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+                            </span>
+                        </li>
+                        <li id="bib.bib8" class="ltx_bibitem ltx_bib_book">
+                            <span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">S. Marshall (2004)</span>
+                            <span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Streets and patterns</span>.
+                            </span>
+                            <span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Routledge</span>.
+                            </span>
+                            <span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1" title="1 Context ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.
+                            </span>
+                        </li>
+                        <li id="bib.bib13" class="ltx_bibitem ltx_bib_article">
+                            <span class="ltx_bibtag ltx_bib_author-year ltx_role_refnum">M. B. Pont and P. Haupt (2007)</span>
+                            <span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The relation between urban form and density</span>.
+                            </span>
+                            <span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Urban morphology</span> <span class="ltx_text ltx_bib_volume">11</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 62</span>.
+                            </span>
+                            <span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S6.p1" title="6 Future research ‣ A tool for the calculation of the compactness of city blocks in R" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>.
+                            </span>
+                        </li>
+                    </ul>
+                </section>
+            </article>
+        </div>
+        <footer class="ltx_page_footer">
+            <div class="ltx_page_logo">Generated on Mon Mar 13 21:42:24 2017 by <a href="http://dlmf.nist.gov/LaTeXML/">LaTeXML <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="[LOGO]"></a>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>
